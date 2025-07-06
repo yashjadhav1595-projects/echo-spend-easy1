@@ -77,7 +77,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
   const weekData = useMemo(() => groupBy(transactions, 'week', { selectedWeekStart }), [transactions, selectedWeekStart]);
   const monthData = useMemo(() => {
     const grouped = groupBy(transactions, 'month');
-    return grouped.sort((a, b) => a.label.localeCompare(b.label));
+    return grouped.sort((a, b) => a.label.localeCompare(b.label)); // Ascending order
   }, [transactions]);
   const yearData = useMemo(() => groupBy(transactions, 'year'), [transactions]);
 
