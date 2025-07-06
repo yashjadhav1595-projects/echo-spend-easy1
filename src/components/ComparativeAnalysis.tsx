@@ -75,7 +75,10 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
   const hourData = useMemo(() => groupBy(transactions, 'hour', { selectedDate }), [transactions, selectedDate]);
   const dayData = useMemo(() => groupBy(transactions, 'day'), [transactions]);
   const weekData = useMemo(() => groupBy(transactions, 'week', { selectedWeekStart }), [transactions, selectedWeekStart]);
-  const monthData = useMemo(() => groupBy(transactions, 'month'), [transactions]);
+  const monthData = useMemo(() => {
+    const grouped = groupBy(transactions, 'month');
+    return grouped.sort((a, b) => a.label.localeCompare(b.label));
+  }, [transactions]);
   const yearData = useMemo(() => groupBy(transactions, 'year'), [transactions]);
 
   // Previous period data for comparison

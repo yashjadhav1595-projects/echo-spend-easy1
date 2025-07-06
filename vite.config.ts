@@ -1,5 +1,3 @@
-
-
 // Polyfill crypto.getRandomValues for Vite/node (ESM compatible)
 import crypto from 'crypto';
 if (typeof globalThis.crypto === 'undefined') {
@@ -11,7 +9,6 @@ if (typeof globalThis.crypto === 'undefined') {
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
