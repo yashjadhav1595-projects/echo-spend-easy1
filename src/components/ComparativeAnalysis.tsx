@@ -78,6 +78,32 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// Custom active bar shape for dark/neon hover effect
+const CustomActiveBar = (props: any) => {
+  const { fill, x, y, width, height, radius } = props;
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={radius ? radius[0] : 8}
+        fill="#23243a"
+        stroke="#4de3c1"
+        strokeWidth={4}
+        filter="url(#glow)"
+        opacity={0.95}
+      />
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#4de3c1" floodOpacity="0.7" />
+        </filter>
+      </defs>
+    </g>
+  );
+};
+
 export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassName = '' }) => {
   const [tab, setTab] = useState<GroupKey>('month');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -198,7 +224,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <XAxis dataKey="label" stroke="#7ee787" fontSize={13} tick={{ fill: '#7ee787', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#7ee787" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#7ee787', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="amount" fill="url(#barGradientWeek)" radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="amount" fill="url(#barGradientWeek)" radius={[8, 8, 0, 0]} maxBarSize={40} activeBar={<CustomActiveBar />} />
                 {comparePrev && prevWeekData && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Week" />
                 )}
@@ -215,7 +241,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <XAxis dataKey="label" stroke="#6c63ff" fontSize={13} tick={{ fill: '#6c63ff', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#6c63ff" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#6c63ff', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="amount" fill="url(#barGradientMonth)" radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="amount" fill="url(#barGradientMonth)" radius={[8, 8, 0, 0]} maxBarSize={40} activeBar={<CustomActiveBar />} />
                 {comparePrev && prevMonthData && prevMonthData.length > 0 && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Month" />
                 )}
@@ -235,7 +261,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <XAxis dataKey="label" stroke="#ffb86b" fontSize={13} tick={{ fill: '#ffb86b', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#ffb86b" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#ffb86b', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="amount" fill="url(#barGradientYear)" radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="amount" fill="url(#barGradientYear)" radius={[8, 8, 0, 0]} maxBarSize={40} activeBar={<CustomActiveBar />} />
                 {comparePrev && prevYearData && prevYearData.length > 0 && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Year" />
                 )}
