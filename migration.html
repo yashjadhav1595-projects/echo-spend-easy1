@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Migration Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #4de3c1;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .migrate-btn {
+            background: #4de3c1;
+            color: #1a1a1a;
+        }
+        .migrate-btn:hover {
+            background: #3bc8a8;
+            transform: translateY(-2px);
+        }
+        .check-btn {
+            background: #b3baff;
+            color: #1a1a1a;
+        }
+        .check-btn:hover {
+            background: #9ba8ff;
+            transform: translateY(-2px);
+        }
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+        .clear-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+        .log-container {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+        .log-success { color: #4de3c1; }
+        .log-error { color: #ff6b6b; }
+        .log-info { color: #b3baff; }
+        .log-warning { color: #ffd93d; }
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .status.ready { background: #2d5a2d; color: #4de3c1; }
+        .status.migrating { background: #5a4d2d; color: #ffd93d; }
+        .status.completed { background: #2d5a2d; color: #4de3c1; }
+        .status.error { background: #5a2d2d; color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 MongoDB Migration Tool</h1>
+        
+        <div id="status" class="status ready">
+            Ready to migrate localStorage data to MongoDB
+        </div>
+        
+        <div class="button-group">
+            <button class="migrate-btn" onclick="startMigration()">
+                🚀 Start Migration
+            </button>
+            <button class="check-btn" onclick="checkData()">
+                🔍 Check MongoDB Data
+            </button>
+            <button class="clear-btn" onclick="clearLog()">
+                🗑️ Clear Log
+            </button>
+        </div>
+        
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">
+                📦 Migration tool loaded successfully!
+            </div>
+            <div class="log-entry log-info">
+                💡 Make sure your backend server is running on port 5174
+            </div>
+            <div class="log-entry log-info">
+                🔗 Click "Start Migration" to move your localStorage data to MongoDB
+            </div>
+        </div>
+    </div>
+
+    <script src="migrate-to-mongodb.js"></script>
+    <script>
+        let isMigrating = false;
+        
+        function updateStatus(message, type = 'ready') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+        
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '';
+            addLog('Log cleared', 'info');
+        }
+        
+        async function startMigration() {
+            if (isMigrating) {
+                addLog('Migration already in progress...', 'warning');
+                return;
+            }
+            
+            isMigrating = true;
+            updateStatus('Migration in progress...', 'migrating');
+            addLog('🚀 Starting migration to MongoDB...', 'info');
+            
+            try {
+                // Override console.log to capture output
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                console.log = function(...args) {
+                    const message = args.join(' ');
+                    addLog(message, message.includes('✅') ? 'success' : 
+                                   message.includes('❌') ? 'error' : 
+                                   message.includes('⚠️') ? 'warning' : 'info');
+                    originalLog.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                    const message = args.join(' ');
+                    addLog(message, 'error');
+                    originalError.apply(console, args);
+                };
+                
+                await migrateToMongoDB();
+                
+                updateStatus('Migration completed successfully!', 'completed');
+                addLog('🎉 Migration process finished!', 'success');
+                
+            } catch (error) {
+                updateStatus('Migration failed!', 'error');
+                addLog(`❌ Migration failed: ${error.message}`, 'error');
+            } finally {
+                isMigrating = false;
+                // Restore original console functions
+                console.log = originalLog;
+                console.error = originalError;
+            }
+        }
+        
+        async function checkData() {
+            addLog('🔍 Checking MongoDB data...', 'info');
+            
+            try {
+                // Override console.log to capture output
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                console.log = function(...args) {
+                    const message = args.join(' ');
+                    addLog(message, message.includes('✅') ? 'success' : 
+                                   message.includes('❌') ? 'error' : 
+                                   message.includes('⚠️') ? 'warning' : 'info');
+                    originalLog.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                    const message = args.join(' ');
+                    addLog(message, 'error');
+                    originalError.apply(console, args);
+                };
+                
+                await checkMongoDBData();
+                
+            } catch (error) {
+                addLog(`❌ Failed to check data: ${error.message}`, 'error');
+            } finally {
+                // Restore original console functions
+                console.log = originalLog;
+                console.error = originalError;
+            }
+        }
+    </script>
+</body>
+</html> 

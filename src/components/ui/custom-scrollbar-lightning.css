@@ -1,0 +1,21 @@
+/* Lightning custom scrollbar for Edit Budget section */
+.custom-scrollbar-lightning {
+  scrollbar-width: thin;
+  scrollbar-color: #ffe066 #23243a;
+}
+.custom-scrollbar-lightning::-webkit-scrollbar {
+  width: 10px;
+  background: #23243a;
+  border-radius: 8px;
+}
+.custom-scrollbar-lightning::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ffe066 40%, #ffd700 100%);
+  border-radius: 8px;
+  box-shadow: 0 0 6px #ffe06699;
+}
+.custom-scrollbar-lightning::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ffd700 60%, #fffbe6 100%);
+}
+.custom-scrollbar-lightning::-webkit-scrollbar-corner {
+  background: #23243a;
+}
