@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Menu } from 'lucide-react';
 import { TransactionForm } from '@/components/TransactionForm';
 import TransactionList from '@/components/TransactionList';
@@ -14,6 +14,9 @@ import { Transaction } from '@/types/Transaction';
 import { Button } from '@/components/ui/button';
 import { BudgetDialog } from '@/components/BudgetDialog';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file profile email openid';
+
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -24,6 +27,12 @@ const Index = () => {
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, number>>({});
   const [income, setIncome] = useState(0);
+  const [isDriveConnected, setIsDriveConnected] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [driveUser, setDriveUser] = useState<{ email: string; name: string } | null>(null);
+  const accessTokenRef = useRef<string | null>(null);
+  const [lastBackup, setLastBackup] = useState<Date | null>(null);
+  const backupIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load transactions from localStorage on component mount
   useEffect(() => {
@@ -38,6 +47,25 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('finance-transactions', JSON.stringify(transactions));
   }, [transactions]);
+
+  // Load Google API script
+  useEffect(() => {
+    if (!window.gapi) {
+      const script = document.createElement('script');
+      script.src = 'https://apis.google.com/js/api.js';
+      script.async = true;
+      script.onload = () => {
+        window.gapi.load('client:auth2', () => {
+          window.gapi.client.init({
+            clientId: GOOGLE_CLIENT_ID,
+            scope: GOOGLE_SCOPES,
+            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+          });
+        });
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -90,6 +118,64 @@ const Index = () => {
     setGoalPrompt('');
   };
 
+  // Google Sign-In handler
+  const handleConnectDrive = async () => {
+    if (!window.gapi) return;
+    try {
+      await window.gapi.auth2.getAuthInstance().signIn();
+      const user = window.gapi.auth2.getAuthInstance().currentUser.get();
+      const profile = user.getBasicProfile();
+      const token = user.getAuthResponse().access_token;
+      accessTokenRef.current = token;
+      setDriveUser({ email: profile.getEmail(), name: profile.getName() });
+      setIsDriveConnected(true);
+    } catch (err) {
+      alert('Google Drive connection failed.');
+    }
+  };
+
+  // Backup function: uploads transactions as JSON to Google Drive
+  const backupToDrive = async () => {
+    if (!accessTokenRef.current) return;
+    setIsBackingUp(true);
+    try {
+      const fileContent = JSON.stringify({ transactions, budgets: budget, categoryBudgets });
+      const blob = new Blob([fileContent], { type: 'application/json' });
+      const metadata = {
+        name: `echo-spend-easy-backup-${new Date().toISOString()}.json`,
+        mimeType: 'application/json',
+      };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', blob);
+      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessTokenRef.current}`,
+        },
+        body: form,
+      });
+      setLastBackup(new Date());
+    } catch (err) {
+      alert('Google Drive backup failed.');
+    }
+    setIsBackingUp(false);
+  };
+
+  // Start/clear backup interval after connecting
+  useEffect(() => {
+    if (isDriveConnected) {
+      backupToDrive(); // Initial backup on connect
+      backupIntervalRef.current = setInterval(backupToDrive, 1800000); // 30 min
+    } else if (backupIntervalRef.current) {
+      clearInterval(backupIntervalRef.current);
+    }
+    return () => {
+      if (backupIntervalRef.current) clearInterval(backupIntervalRef.current);
+    };
+    // eslint-disable-next-line
+  }, [isDriveConnected, transactions, budget, categoryBudgets]);
+
   return (
     <div className="min-h-screen bg-[#181b2e]">
       {/* Navbar */}
@@ -123,6 +209,27 @@ const Index = () => {
           <Button onClick={() => setBudgetDialogOpen(true)} variant="outline" className="border-[#35365a] text-[#e6e6fa]">
             Manage Budgets & Goals
           </Button>
+          <Button
+            onClick={handleConnectDrive}
+            variant="outline"
+            className="border-[#35365a] text-[#4de3c1] font-bold"
+            disabled={isDriveConnected}
+          >
+            {isDriveConnected ? (driveUser ? `Connected: ${driveUser.email}` : 'Connected') : 'Connect (to Drive Account)'}
+          </Button>
+          <Button
+            onClick={backupToDrive}
+            variant="outline"
+            className="border-[#35365a] text-[#6c63ff] font-bold"
+            disabled={!isDriveConnected || isBackingUp}
+          >
+            {isBackingUp ? 'Backing Up...' : 'Backup'}
+          </Button>
+          {isDriveConnected && (
+            <span className="text-xs text-[#b3baff] ml-2 mt-2">
+              Last backup: {lastBackup ? lastBackup.toLocaleTimeString() : 'Pending...'}
+            </span>
+          )}
         </div>
         <SummaryCards transactions={transactions} cardClassName="bg-gradient-to-br from-[#23243a] to-[#2d2e4a] border border-[#35365a] text-[#e6e6fa] shadow-lg rounded-xl" />
         

@@ -140,7 +140,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ transactions, card
                   >
                     {categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getColor(entry, index)} />
-                    ))}
+                      ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>

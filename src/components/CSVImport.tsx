@@ -136,31 +136,31 @@ function generateMockTransactions(count: number, categories: Array<{ value: stri
     let amount: number;
     switch (category) {
       case 'food':
-        amount = parseFloat(faker.finance.amount(5, 150, 2));
+        amount = parseFloat(faker.finance.amount({ min: 5, max: 150, dec: 2 }));
         break;
       case 'transport':
-        amount = parseFloat(faker.finance.amount(10, 200, 2));
+        amount = parseFloat(faker.finance.amount({ min: 10, max: 200, dec: 2 }));
         break;
       case 'shopping':
-        amount = parseFloat(faker.finance.amount(20, 500, 2));
+        amount = parseFloat(faker.finance.amount({ min: 20, max: 500, dec: 2 }));
         break;
       case 'entertainment':
-        amount = parseFloat(faker.finance.amount(10, 300, 2));
+        amount = parseFloat(faker.finance.amount({ min: 10, max: 300, dec: 2 }));
         break;
       case 'health':
-        amount = parseFloat(faker.finance.amount(15, 500, 2));
+        amount = parseFloat(faker.finance.amount({ min: 15, max: 500, dec: 2 }));
         break;
       case 'bills':
-        amount = parseFloat(faker.finance.amount(50, 1000, 2));
+        amount = parseFloat(faker.finance.amount({ min: 50, max: 1000, dec: 2 }));
         break;
       case 'education':
-        amount = parseFloat(faker.finance.amount(25, 2000, 2));
+        amount = parseFloat(faker.finance.amount({ min: 25, max: 2000, dec: 2 }));
         break;
       case 'travel':
-        amount = parseFloat(faker.finance.amount(100, 5000, 2));
+        amount = parseFloat(faker.finance.amount({ min: 100, max: 5000, dec: 2 }));
         break;
       default:
-        amount = parseFloat(faker.finance.amount(5, 500, 2));
+        amount = parseFloat(faker.finance.amount({ min: 5, max: 500, dec: 2 }));
     }
 
     // Generate dates within the last 12 months with realistic patterns
