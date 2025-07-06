@@ -18,6 +18,7 @@ import { BudgetDialog } from '@/components/BudgetDialog';
 declare global {
   interface Window {
     gapi: any;
+    google: any;
   }
 }
 
@@ -57,22 +58,56 @@ const Index = () => {
 
   // Load Google API script
   useEffect(() => {
-    if (!window.gapi) {
+    console.log('Google Client ID:', GOOGLE_CLIENT_ID); // Debug log
+    if (!GOOGLE_CLIENT_ID) {
+      console.error('Google Client ID is not defined. Check your .env file.');
+      return;
+    }
+    
+    // Load Google Identity Services only (no deprecated gapi)
+    if (!window.google?.accounts?.id) {
       const script = document.createElement('script');
-      script.src = 'https://apis.google.com/js/api.js';
+      script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
+      script.defer = true;
       script.onload = () => {
-        window.gapi.load('client:auth2', () => {
-          window.gapi.client.init({
-            clientId: GOOGLE_CLIENT_ID,
-            scope: GOOGLE_SCOPES,
-            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-          });
+        console.log('Google Identity Services script loaded successfully');
+        // Initialize Google Identity Services with proper configuration
+        window.google?.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+          scope: GOOGLE_SCOPES,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          prompt_parent_id: 'google-signin-container', // Optional: specify container
         });
+        console.log('Google Identity Services initialized');
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google Identity Services script');
       };
       document.body.appendChild(script);
     }
-  }, []);
+  }, [GOOGLE_CLIENT_ID]);
+
+  // Handle Google Identity Services response
+  const handleCredentialResponse = (response: any) => {
+    console.log('Google Identity response received:', response);
+    if (response.credential) {
+      // Decode the JWT token to get user info
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      console.log('User info:', payload);
+      
+      setDriveUser({ 
+        email: payload.email, 
+        name: payload.name 
+      });
+      setIsDriveConnected(true);
+      
+      // Store the credential for API calls
+      accessTokenRef.current = response.credential;
+    }
+  };
 
   const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
     const newTransaction: Transaction = {
@@ -119,7 +154,7 @@ const Index = () => {
     // Also export to MongoDB
     try {
       await Promise.all(transactions.map(tx =>
-        fetch('/api/transactions', {
+        fetch('http://localhost:5174/api/transactions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tx)
@@ -139,19 +174,22 @@ const Index = () => {
     setGoalPrompt('');
   };
 
-  // Google Sign-In handler
+  // Google Sign-In handler using Google Identity Services
   const handleConnectDrive = async () => {
-    if (!window.gapi) return;
+    console.log('Attempting Google Sign-In...');
+    
+    if (!window.google?.accounts?.id) {
+      console.error('Google Identity Services not loaded');
+      alert('Google Identity Services not loaded. Please refresh the page.');
+      return;
+    }
+    
     try {
-      await window.gapi.auth2.getAuthInstance().signIn();
-      const user = window.gapi.auth2.getAuthInstance().currentUser.get();
-      const profile = user.getBasicProfile();
-      const token = user.getAuthResponse().access_token;
-      accessTokenRef.current = token;
-      setDriveUser({ email: profile.getEmail(), name: profile.getName() });
-      setIsDriveConnected(true);
+      console.log('Prompting for sign-in...');
+      window.google.accounts.id.prompt();
     } catch (err) {
-      alert('Google Drive connection failed.');
+      console.error('Google Sign-In failed:', err);
+      alert(`Google Sign-In failed: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -237,6 +275,20 @@ const Index = () => {
             disabled={isDriveConnected}
           >
             {isDriveConnected ? (driveUser ? `Connected: ${driveUser.email}` : 'Connected') : 'Connect (to Drive Account)'}
+          </Button>
+          <Button
+            onClick={() => {
+              console.log('=== Google OAuth Debug Info ===');
+              console.log('Client ID:', GOOGLE_CLIENT_ID);
+              console.log('Scopes:', GOOGLE_SCOPES);
+              console.log('Window.google:', !!window.google);
+              console.log('Google Identity Services:', !!window.google?.accounts?.id);
+              alert('Check browser console for debug info');
+            }}
+            variant="outline"
+            className="border-[#35365a] text-[#ff6b6b] font-bold"
+          >
+            Debug OAuth
           </Button>
           <Button
             onClick={backupToDrive}

@@ -51,6 +51,109 @@ This project is a modern, full-stack personal finance dashboard built with React
 
 ---
 
+## 🛠️ Tech Stack
+
+### **Frontend Technologies**
+
+#### **React 18.3.1** ⚛️
+- **Why React?** Chosen for its mature ecosystem, excellent TypeScript support, and component-based architecture
+- **Hooks-based architecture** for state management and side effects
+- **Functional components** with modern React patterns
+- **Virtual DOM** for efficient rendering and updates
+
+#### **TypeScript 5.5.3** 🔷
+- **Type safety** across the entire application
+- **Enhanced developer experience** with IntelliSense and error catching
+- **Better code maintainability** and refactoring capabilities
+- **Interface definitions** for all data structures and API responses
+
+#### **Vite 5.4.1** ⚡
+- **Lightning-fast development** with Hot Module Replacement (HMR)
+- **Optimized build process** with esbuild and Rollup
+- **Plugin ecosystem** for enhanced development experience
+- **Out-of-the-box support** for TypeScript, CSS modules, and more
+
+#### **Tailwind CSS 3.4.11** 🎨
+- **Utility-first CSS framework** for rapid UI development
+- **Custom design system** with branded color palette
+- **Responsive design** utilities for all screen sizes
+- **Dark mode support** with seamless theme switching
+
+#### **shadcn/ui** 🧩
+- **Modern component library** built on Radix UI primitives
+- **Accessible components** with proper ARIA attributes
+- **Customizable design** that matches our brand identity
+- **TypeScript-first** components with full type safety
+
+#### **Recharts 2.12.7** 📊
+- **Composable charting library** built on React components
+- **Interactive data visualization** with hover effects and animations
+- **Responsive charts** that adapt to container sizes
+- **Multiple chart types** including pie charts, bar charts, and line charts
+
+### **Backend Technologies**
+
+#### **Express.js 5.1.0** 🚀
+- **Lightweight Node.js framework** for API development
+- **Middleware architecture** for request processing
+- **RESTful API endpoints** for data management
+- **CORS configuration** for cross-origin requests
+
+#### **MongoDB Atlas** ☁️
+- **Cloud-native NoSQL database** for scalable data storage
+- **Real-time data synchronization** across devices
+- **Automatic backups** and disaster recovery
+- **Global distribution** for low-latency access
+
+### **Why Not Next.js?** 🤔
+
+While Next.js is an excellent framework, I chose **Vite + React** for this project for several strategic reasons:
+
+#### **1. Learning Focus & Simplicity** 📚
+- **Educational value**: Vite + React provides a cleaner learning path for understanding modern web development fundamentals
+- **Reduced complexity**: No framework-specific abstractions to learn initially
+- **Direct control**: Full control over routing, state management, and build configuration
+
+#### **2. Project Requirements** 🎯
+- **Single-page application**: No need for server-side rendering (SSR) or static site generation (SSG)
+- **Client-side routing**: React Router provides sufficient routing capabilities
+- **API-first approach**: Backend is separate Express server, not integrated with frontend
+
+#### **3. Development Experience** ⚡
+- **Faster development server**: Vite's HMR is significantly faster than Next.js
+- **Simpler debugging**: No framework-specific debugging complexities
+- **Flexible build process**: Custom Vite configuration for specific needs
+
+#### **4. Deployment Flexibility** 🚀
+- **Static hosting**: Can be deployed to any static hosting service (Vercel, Netlify, GitHub Pages)
+- **No server requirements**: Frontend is completely static
+- **Cost-effective**: No server-side rendering costs
+
+#### **5. Future Migration Path** 🔄
+- **Easy migration**: Can easily migrate to Next.js later if SSR/SSG becomes needed
+- **Framework agnostic**: Core React knowledge transfers to any React framework
+- **Progressive enhancement**: Can add Next.js features incrementally
+
+### **Current Architecture Benefits** ✅
+
+- **Separation of concerns**: Frontend and backend are completely independent
+- **Scalability**: Can scale frontend and backend independently
+- **Technology flexibility**: Can swap out any part of the stack without affecting others
+- **Performance**: Optimized bundle size with tree-shaking and code splitting
+- **Developer experience**: Fast feedback loop with Vite's HMR
+
+### **When Next.js Would Be Better** 🔄
+
+We would consider migrating to Next.js if we needed:
+- **Server-side rendering** for SEO optimization
+- **Static site generation** for marketing pages
+- **API routes** integrated with frontend
+- **Image optimization** and automatic optimization
+- **Internationalization** features
+- **Built-in performance optimizations**
+
+---
+
 ## 📋 Table of Contents
 
 - [✨ Features](#-features)

@@ -29,7 +29,22 @@ async function connectMongo() {
 connectMongo();
 
 const app = express();
-app.use(cors());
+
+// Add CSP headers for Google OAuth
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.gstatic.com https://apis.google.com; frame-src 'self' https://accounts.google.com; connect-src 'self' https://accounts.google.com https://www.googleapis.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  );
+  next();
+});
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://echo-spend-easy1.vercel.app'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(bodyParser.json());
 
 app.post('/api/perplexity', async (req, res) => {
