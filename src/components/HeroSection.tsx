@@ -12,14 +12,17 @@ export const HeroSection: React.FC = () => {
         <p className="text-lg md:text-2xl text-[#b3baff] mb-8 max-w-xl">
           AI-powered, real-time dashboard for smarter spending, budgeting, CSV import, and cloud sync. Visualize, analyze, and optimize your financial life.
         </p>
-        <motion.a
-          href="#"
-          whileHover={{ scale: 1.05, boxShadow: '0 0 16px #4de3c1' }}
+        <motion.button
+          onClick={() => {
+            const el = document.getElementById('transaction-form');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          whileHover={{ scale: 1.07, boxShadow: '0 0 32px #4de3c1, 0 0 64px #6c63ff' }}
           whileTap={{ scale: 0.97 }}
-          className="inline-block px-8 py-4 rounded-full bg-gradient-to-r from-[#4de3c1] to-[#6c63ff] text-[#181b2e] font-bold text-xl shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#4de3c1] animate-pulse cursor-pointer"
+          className="inline-block px-8 py-4 rounded-full bg-gradient-to-r from-[#4de3c1] to-[#6c63ff] text-[#181b2e] font-bold text-xl shadow-[0_0_24px_#4de3c1,0_0_48px_#6c63ff] transition-all focus:outline-none focus:ring-2 focus:ring-[#4de3c1] animate-pulse cursor-pointer border-2 border-[#4de3c1]/60"
         >
           Get Started
-        </motion.a>
+        </motion.button>
       </div>
       {/* Right: Visual grid with real features */}
       <div className="flex-1 flex flex-col justify-center items-center w-full h-full px-4 md:px-0 py-12 md:py-0 z-10">
