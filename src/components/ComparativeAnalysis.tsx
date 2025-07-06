@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Transaction } from '@/types/Transaction';
+import { motion } from 'framer-motion';
 
 interface Props {
   transactions: Transaction[];
@@ -52,6 +53,30 @@ function groupBy(transactions: Transaction[], key: GroupKey, options?: { selecte
   return Object.entries(groups).map(([label, amount]) => ({ label, amount }));
 }
 
+// Custom Tooltip for all chart types
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="p-4 rounded-2xl shadow-2xl border-2 border-[#4de3c1] bg-[#23243a] text-white min-w-[140px] backdrop-blur-xl"
+      >
+        <div className="flex items-center gap-2 text-lg font-bold mb-1">
+          <span>{label}</span>
+        </div>
+        {data.amount !== undefined ? (
+          <div className="text-xl font-extrabold text-[#4de3c1]">${data.amount.toFixed(2)}</div>
+        ) : (
+          <div className="text-xl font-extrabold text-[#4de3c1]">${data.value?.toFixed(2) ?? ''}</div>
+        )}
+      </motion.div>
+    );
+  }
+  return null;
+};
 
 export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassName = '' }) => {
   const [tab, setTab] = useState<GroupKey>('month');
@@ -158,7 +183,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <CartesianGrid strokeDasharray="4 4" stroke="#35365a" />
                 <XAxis dataKey="label" stroke="#4de3c1" fontSize={13} tick={{ fill: '#4de3c1', fontWeight: 500 }} axisLine={false} tickLine={false} label={{ value: 'Hour', position: 'insideBottom', offset: -5, fill: '#4de3c1' }} />
                 <YAxis stroke="#4de3c1" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#4de3c1', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(76, 227, 193, 0.08)' }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Line type="monotone" dataKey="amount" stroke="#4de3c1" strokeWidth={3} dot={{ r: 4, fill: '#4de3c1' }} activeDot={{ r: 6 }} />
                 {comparePrev && prevHourData && (
                   <Line type="monotone" dataKey="amount" data={prevHourData} stroke="#b3baff" strokeDasharray="4 2" strokeWidth={2} dot={false} name="Previous Day" />
@@ -172,7 +197,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <CartesianGrid strokeDasharray="4 4" stroke="#35365a" />
                 <XAxis dataKey="label" stroke="#7ee787" fontSize={13} tick={{ fill: '#7ee787', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#7ee787" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#7ee787', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(126, 231, 135, 0.08)' }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="amount" fill="url(#barGradientWeek)" radius={[8, 8, 0, 0]} maxBarSize={40} />
                 {comparePrev && prevWeekData && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Week" />
@@ -189,7 +214,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <CartesianGrid strokeDasharray="4 4" stroke="#35365a" />
                 <XAxis dataKey="label" stroke="#6c63ff" fontSize={13} tick={{ fill: '#6c63ff', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#6c63ff" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#6c63ff', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(108, 99, 255, 0.08)' }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="amount" fill="url(#barGradientMonth)" radius={[8, 8, 0, 0]} maxBarSize={40} />
                 {comparePrev && prevMonthData && prevMonthData.length > 0 && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Month" />
@@ -209,7 +234,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <CartesianGrid strokeDasharray="4 4" stroke="#35365a" />
                 <XAxis dataKey="label" stroke="#ffb86b" fontSize={13} tick={{ fill: '#ffb86b', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#ffb86b" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#ffb86b', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(255, 184, 107, 0.08)' }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="amount" fill="url(#barGradientYear)" radius={[8, 8, 0, 0]} maxBarSize={40} />
                 {comparePrev && prevYearData && prevYearData.length > 0 && (
                   <Bar dataKey="prev" fill="#b3baff" radius={[8, 8, 0, 0]} maxBarSize={20} name="Previous Year" />
@@ -226,7 +251,7 @@ export const ComparativeAnalysis: React.FC<Props> = ({ transactions, cardClassNa
                 <CartesianGrid strokeDasharray="4 4" stroke="#35365a" />
                 <XAxis dataKey="label" stroke="#4de3c1" fontSize={13} tick={{ fill: '#4de3c1', fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#4de3c1" fontSize={13} tickFormatter={v => `$${v}`} tick={{ fill: '#4de3c1', fontWeight: 500 }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(76, 227, 193, 0.08)' }} />
+                <Tooltip content={<CustomTooltip />} />
                 <Line type="monotone" dataKey="amount" stroke="#4de3c1" strokeWidth={3} dot={{ r: 4, fill: '#4de3c1' }} activeDot={{ r: 6 }} />
               </LineChart>
             )}
