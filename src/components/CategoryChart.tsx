@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -89,6 +88,14 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ transactions, card
     );
   };
 
+  // Use category color if available, else fallback to palette
+  const getColor = (entry, index) => {
+    const cat = categories.find(cat => cat.label === entry.name);
+    return cat?.color || [
+      '#ffb300', '#ff4081', '#7c4dff', '#00e676', '#2979ff', '#ff1744', '#00b8d4', '#ffd600', '#c51162', '#64dd17'
+    ][index % 10];
+  };
+
   return (
     <Card className={`backdrop-blur-2xl bg-gradient-to-br from-[#23243a] via-[#2d2e4a] to-[#181b2e] border border-[#35365a] shadow-2xl ${cardClassName} rounded-2xl p-2`}> 
       <CardHeader>
@@ -112,7 +119,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ transactions, card
             transition={{ duration: 0.7, ease: 'easeOut' }}
           >
             <div className="w-full flex justify-center">
-              <ResponsiveContainer width={340} height={240}>
+              <ResponsiveContainer width={340} height={260}>
                 <PieChart>
                   <Pie
                     data={categoryData}
@@ -120,25 +127,20 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ transactions, card
                     cy="50%"
                     labelLine={false}
                     label={CustomLabel}
-                    outerRadius={90}
-                    innerRadius={48}
+                    outerRadius={100}
+                    innerRadius={50}
                     fill="#8884d8"
                     dataKey="value"
                     stroke="#23243a"
                     strokeWidth={3}
+                    isAnimationActive={true}
+                    animationBegin={0}
+                    animationDuration={1200}
+                    animationEasing="ease-out"
                   >
                     {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={`url(#cat-gradient-${index})`} />
+                      <Cell key={`cell-${index}`} fill={getColor(entry, index)} />
                     ))}
-                    {/* SVG gradients for each slice */}
-                    <defs>
-                      {categoryData.map((_, index) => (
-                        <linearGradient id={`cat-gradient-${index}`} key={index} x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor={COLORS[index % COLORS.length].split(' ')[1]} />
-                          <stop offset="100%" stopColor={COLORS[index % COLORS.length].split(' ')[4]} />
-                        </linearGradient>
-                      ))}
-                    </defs>
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
@@ -146,7 +148,7 @@ export const CategoryChart: React.FC<CategoryChartProps> = ({ transactions, card
             </div>
             <div className="flex flex-wrap justify-center gap-4 mt-2">
               {categoryData.map((entry, index) => (
-                <div key={index} className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#23243a]/70 border border-[#35365a] shadow text-base font-semibold" style={{ color: COLORS[index % COLORS.length].includes('#') ? COLORS[index % COLORS.length] : '#fff' }}>
+                <div key={index} className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#23243a]/70 border border-[#35365a] shadow text-base font-semibold" style={{ color: getColor(entry, index) }}>
                   <span className="text-xl">{entry.emoji}</span>
                   <span>{entry.name}</span>
                 </div>
