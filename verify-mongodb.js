@@ -1,14 +1,21 @@
 // Verification script to check MongoDB data
 // Run this with: node verify-mongodb.js
 
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config();
 
-// Your MongoDB connection string
-const uri = "mongodb+srv://echo-spend-easy:echo-spend-easy@cluster0.mongodb.net/echo-spend-easy?retryWrites=true&w=majority";
+const uri = process.env.MONGODB_URI;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
 async function verifyMongoDBData() {
-  const client = new MongoClient(uri);
-  
   try {
     console.log('🔌 Connecting to MongoDB...');
     await client.connect();

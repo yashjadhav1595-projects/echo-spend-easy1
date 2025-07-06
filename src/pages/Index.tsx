@@ -14,6 +14,13 @@ import { Transaction } from '@/types/Transaction';
 import { Button } from '@/components/ui/button';
 import { BudgetDialog } from '@/components/BudgetDialog';
 
+// Fix for window.gapi TypeScript error
+declare global {
+  interface Window {
+    gapi: any;
+  }
+}
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file profile email openid';
 
@@ -95,7 +102,7 @@ const Index = () => {
   };
 
   // Export CSV handler
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     const csvRows = [
       ['Date', 'Time', 'Amount', 'Description', 'Category'],
       ...transactions.map(t => [t.date, t.time || '', t.amount, t.description, t.category])
@@ -108,6 +115,20 @@ const Index = () => {
     a.download = 'transactions.csv';
     a.click();
     URL.revokeObjectURL(url);
+
+    // Also export to MongoDB
+    try {
+      await Promise.all(transactions.map(tx =>
+        fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tx)
+        })
+      ));
+      alert('Transactions exported to MongoDB!');
+    } catch (err) {
+      alert('Failed to export transactions to MongoDB.');
+    }
   };
 
   // Set Goal handler (simulate natural language execution)

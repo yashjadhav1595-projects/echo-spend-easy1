@@ -1,7 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const HeroSection: React.FC = () => {
+type HeroSectionProps = {
+  transactions: any[];
+  transactionsToday: number;
+  budget: { month: string; year: string; amount: number };
+  categoryBudgets: Record<string, number>;
+  onStartTracking: () => void;
+};
+
+export const HeroSection: React.FC<HeroSectionProps> = (props) => {
   return (
     <section className="relative min-h-screen w-full flex flex-col md:flex-row items-center justify-center overflow-hidden bg-[#181b2e]">
       {/* Left: Headline, subheadline, CTA */}
@@ -13,10 +21,7 @@ export const HeroSection: React.FC = () => {
           AI-powered, real-time dashboard for smarter spending, budgeting, CSV import, and cloud sync. Visualize, analyze, and optimize your financial life.
         </p>
         <motion.button
-          onClick={() => {
-            const el = document.getElementById('transaction-form');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }}
+          onClick={props.onStartTracking}
           whileHover={{ scale: 1.07, boxShadow: '0 0 32px #4de3c1, 0 0 64px #6c63ff' }}
           whileTap={{ scale: 0.97 }}
           className="inline-block px-8 py-4 rounded-full bg-gradient-to-r from-[#4de3c1] to-[#6c63ff] text-[#181b2e] font-bold text-xl shadow-[0_0_24px_#4de3c1,0_0_48px_#6c63ff] transition-all focus:outline-none focus:ring-2 focus:ring-[#4de3c1] animate-pulse cursor-pointer border-2 border-[#4de3c1]/60"
