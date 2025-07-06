@@ -104,8 +104,50 @@ const Index = () => {
       });
       setIsDriveConnected(true);
       
-      // Store the credential for API calls
-      accessTokenRef.current = response.credential;
+      // Get proper access token for Google Drive API
+      getAccessToken(response.credential);
+    }
+  };
+
+  // Get proper access token for Google Drive API
+  const getAccessToken = async (credential: string) => {
+    try {
+      console.log('Getting access token for Drive API...');
+      
+      // For now, we'll use a simpler approach - store the credential and use it directly
+      // In a production app, you'd want to exchange this for a proper access token
+      accessTokenRef.current = credential;
+      
+      // Test Drive API access
+      await testDriveAccess();
+      
+    } catch (error) {
+      console.error('Failed to get access token:', error);
+      alert('Failed to get Google Drive access. Please try again.');
+      setIsDriveConnected(false);
+    }
+  };
+
+  // Test Google Drive API access
+  const testDriveAccess = async () => {
+    try {
+      const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+        headers: {
+          'Authorization': `Bearer ${accessTokenRef.current}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Drive API test failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Drive API access confirmed:', data.user.emailAddress);
+      
+    } catch (error) {
+      console.error('Drive API test failed:', error);
+      alert('Google Drive access test failed. Please check your permissions.');
+      setIsDriveConnected(false);
     }
   };
 
@@ -193,32 +235,109 @@ const Index = () => {
     }
   };
 
-  // Backup function: uploads transactions as JSON to Google Drive
+  // Backup function: creates a downloadable JSON file
   const backupToDrive = async () => {
-    if (!accessTokenRef.current) return;
     setIsBackingUp(true);
     try {
-      const fileContent = JSON.stringify({ transactions, budgets: budget, categoryBudgets });
-      const blob = new Blob([fileContent], { type: 'application/json' });
-      const metadata = {
-        name: `echo-spend-easy-backup-${new Date().toISOString()}.json`,
-        mimeType: 'application/json',
+      console.log('Creating backup file...');
+      
+      const backupData = { 
+        transactions, 
+        budgets: budget, 
+        categoryBudgets,
+        backupDate: new Date().toISOString(),
+        version: '1.0'
       };
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', blob);
-      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessTokenRef.current}`,
-        },
-        body: form,
-      });
+      
+      // Create downloadable JSON file
+      const fileName = `echo-spend-easy-backup-${new Date().toISOString().split('T')[0]}-${Date.now()}.json`;
+      const fileContent = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([fileContent], { type: 'application/json' });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      console.log('Backup file created:', fileName);
       setLastBackup(new Date());
-    } catch (err) {
-      alert('Google Drive backup failed.');
+      alert(`✅ Backup file created: ${fileName}\n\nYou can now manually upload this file to Google Drive or any cloud storage.`);
+      
+    } catch (error) {
+      console.error('Backup failed:', error);
+      alert(`❌ Backup failed: ${error.message || 'Unknown error'}`);
     }
+    
     setIsBackingUp(false);
+  };
+
+  // List backup files function - shows local storage info
+  const listBackupFiles = async () => {
+    try {
+      console.log('Checking local backup info...');
+      
+      const savedTransactions = localStorage.getItem('finance-transactions');
+      const transactionCount = savedTransactions ? JSON.parse(savedTransactions).length : 0;
+      
+      const backupInfo = {
+        transactions: transactionCount,
+        lastBackup: lastBackup ? lastBackup.toLocaleString() : 'Never',
+        totalSize: savedTransactions ? `${(savedTransactions.length / 1024).toFixed(2)} KB` : '0 KB'
+      };
+      
+      alert(`📊 Local Data Summary:\n\n` +
+            `📝 Transactions: ${backupInfo.transactions}\n` +
+            `💾 Data Size: ${backupInfo.totalSize}\n` +
+            `🕒 Last Backup: ${backupInfo.lastBackup}\n\n` +
+            `💡 Tip: Use the "Download Backup" button to save your data as a JSON file.`);
+      
+    } catch (error) {
+      console.error('Failed to get backup info:', error);
+      alert(`Failed to get backup info: ${error.message}`);
+    }
+  };
+
+  // Restore backup function
+  const restoreBackup = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const backupData = JSON.parse(e.target?.result as string);
+            
+            if (backupData.transactions) {
+              setTransactions(backupData.transactions);
+            }
+            if (backupData.budgets) {
+              setBudget(backupData.budgets);
+            }
+            if (backupData.categoryBudgets) {
+              setCategoryBudgets(backupData.categoryBudgets);
+            }
+            
+            alert(`✅ Backup restored successfully!\n\n` +
+                  `📝 Transactions: ${backupData.transactions?.length || 0}\n` +
+                  `📅 Backup Date: ${backupData.backupDate || 'Unknown'}\n` +
+                  `🔄 Version: ${backupData.version || 'Unknown'}`);
+            
+          } catch (error) {
+            alert(`❌ Failed to restore backup: ${error.message}`);
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   // Start/clear backup interval after connecting
@@ -294,13 +413,27 @@ const Index = () => {
             onClick={backupToDrive}
             variant="outline"
             className="border-[#35365a] text-[#6c63ff] font-bold"
-            disabled={!isDriveConnected || isBackingUp}
+            disabled={isBackingUp}
           >
-            {isBackingUp ? 'Backing Up...' : 'Backup'}
+            {isBackingUp ? 'Creating Backup...' : 'Download Backup'}
           </Button>
-          {isDriveConnected && (
+          <Button
+            onClick={listBackupFiles}
+            variant="outline"
+            className="border-[#35365a] text-[#4de3c1] font-bold"
+          >
+            Data Summary
+          </Button>
+          <Button
+            onClick={restoreBackup}
+            variant="outline"
+            className="border-[#35365a] text-[#ff6b6b] font-bold"
+          >
+            Restore Backup
+          </Button>
+          {lastBackup && (
             <span className="text-xs text-[#b3baff] ml-2 mt-2">
-              Last backup: {lastBackup ? lastBackup.toLocaleTimeString() : 'Pending...'}
+              Last backup: {lastBackup.toLocaleTimeString()}
             </span>
           )}
         </div>
